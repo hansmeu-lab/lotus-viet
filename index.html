@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#b3261e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lotus Viet">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Lotus Viet</title>
+<style>
+/* VOICE: warm, patient, encouraging — a kind teacher, never a test.
+   IDEA: a Hanoi lacquer box of word cards beside a lotus pond.
+   PICTURE: the lotus pond on the home screen; a flower opens for every day practised.
+   COLOUR and TYPE: lacquer red, lotus pink, gold; system fonts with full Vietnamese marks, large sizes.
+   LAYOUT: one calm column, big buttons, a fixed bar of five tabs at the bottom. */
+:root{color-scheme:light dark;
+ --bg:light-dark(#fffdf9,#1b1212);--card:light-dark(#ffffff,#2a1c1c);--ink:light-dark(#22191a,#f6ecea);
+ --soft:light-dark(#6b5a5a,#c9b6b3);--red:light-dark(#b3261e,#e5534b);--pink:light-dark(#f9dde3,#4a2a31);
+ --gold:#e8a817;--line:light-dark(#eadbd6,#433030);--ok:light-dark(#2e7d4f,#6cc596);--fs:20px}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:var(--fs)/1.5 -apple-system,"Segoe UI",Roboto,"Noto Sans",Arial,sans-serif;overflow-x:clip;
+ padding-bottom:calc(92px + env(safe-area-inset-bottom))}
+header{background:var(--red);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 20px 14px;display:flex;align-items:center;gap:12px}
+header h1{font-size:1.25em;margin:0;font-weight:700;letter-spacing:.01em}
+header small{opacity:.9;font-size:.75em}
+main{max-width:640px;margin:0 auto;padding:18px 16px}
+h2{font-size:1.5em;line-height:1.15;margin:.3em 0 .5em;text-wrap:balance}
+h3{font-size:1em;margin:1.2em 0 .3em;color:var(--red)}
+p{margin:.4em 0}
+.muted{color:var(--soft);font-size:.85em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 2px 10px #0000000d}
+button,.btn{font:inherit;border:0;border-radius:14px;min-height:56px;padding:12px 18px;cursor:pointer;background:var(--pink);color:var(--ink);font-weight:600}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.big{display:block;width:100%;font-size:1.1em;margin:10px 0;min-height:64px}
+.primary{background:var(--red);color:#fff}
+.ok{background:var(--ok);color:#fff}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1 1 140px}
+.vi{font-size:2em;line-height:1.15;font-weight:700;margin:.1em 0}
+.en{font-size:1.15em}
+.speak{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:48px;padding:8px 14px;background:var(--red);color:#fff;border-radius:999px;font-size:.85em;margin:4px 6px 4px 0}
+.speak svg{width:22px;height:22px;fill:currentColor}
+.speak.slow{background:transparent;color:var(--red);border:2px solid var(--red)}
+.ex{border-top:1px solid var(--line);padding:10px 0}
+.ex b{font-size:1.1em}
+input,textarea{font:inherit;font-size:max(16px,1em);width:100%;padding:14px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink)}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav button{background:none;border-radius:0;min-height:76px;font-size:.62em;font-weight:600;color:var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px 2px}
+nav button svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:2}
+nav button[aria-current=true]{color:var(--red)}
+.pond{position:relative;border-radius:20px;overflow:hidden;background:linear-gradient(#cde9ef,#8fc3cf);min-height:200px}
+.pond svg{display:block;width:100%;height:auto}
+.stat{display:flex;gap:12px;margin-top:12px}.stat div{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.stat b{display:block;font-size:1.6em;color:var(--red)}
+.list .item{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.list .item div{flex:1}
+.list .item b{font-size:1.1em}
+.chip{display:inline-block;font-size:.7em;padding:3px 10px;border-radius:999px;background:var(--pink);margin-right:6px}
+.choice{display:block;width:100%;margin:10px 0;text-align:left;font-size:1.05em;background:var(--card);border:2px solid var(--line)}
+.choice.right{background:var(--ok);color:#fff;border-color:var(--ok)}
+.choice.wrong{opacity:.45}
+.match{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.match button{min-height:64px;font-size:.9em;background:var(--card);border:2px solid var(--line)}
+.match button.sel{border-color:var(--gold);background:var(--pink)}
+.match button.done{visibility:hidden}
+.tone{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;align-items:center}
+.cheer{font-size:1.3em;font-weight:700;color:var(--ok);text-align:center;margin:10px 0}
+.toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:12px;font-size:.85em;z-index:9;max-width:90vw}
+@media (prefers-reduced-motion:no-preference){.pop{animation:pop .45s ease-out}@keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}}
+</style>
+</head>
+<body>
+<header>
+ <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><g fill="#fff"><path d="M20 6c4 6 4 14 0 22-4-8-4-16 0-22z"/><path d="M20 28c-6-2-11-7-12-14 6 1 10 6 12 14z" opacity=".85"/><path d="M20 28c6-2 11-7 12-14-6 1-10 6-12 14z" opacity=".85"/><rect x="8" y="30" width="24" height="3" rx="1.5" opacity=".7"/></g></svg>
+ <div><h1>Lotus Viet</h1><small>Vietnamese, one gentle step a day</small></div>
+</header>
+<main id="app"></main>
+<nav id="nav"></nav>
+<script>
+// Built-in word library. Pronunciation follows the Hanoi (northern) standard.
+// Fields: v = Vietnamese, e = English, k = extra search words, c = topic,
+// p = sound it out, s = the story, u = how to use it, x = examples [Vietnamese, English]
+window.LIB = [
+{id:"xinchao",v:"xin chào",e:"hello",k:"hi good morning greeting good day",c:"Greetings",
+ p:"sin chow — “xin” flat and even; “chào” falls gently, like a sigh.",
+ s:"“Chào” is the one greeting for every hour — Vietnamese has no separate “good morning” or “good evening”. “Xin” means “to ask politely”, so “xin chào” is literally “I politely greet you”.",
+ u:"“Xin chào” is a little formal. In daily life people say “chào” plus a word for the person: “Chào ông” to an older man, “Chào bà” to an older woman. “Chào” also works for goodbye.",
+ x:[["Chào ông!","Hello, sir! (to an older man)"],["Xin chào các bạn.","Hello, everyone."]]},
+{id:"camon",v:"cảm ơn",e:"thank you",k:"thanks thank",c:"Greetings",
+ p:"kahm uhn — “cảm” dips down and comes back up, like a doubtful “hmm?”. “ơn” is flat. The c is a k with no puff of air.",
+ s:"From Chinese 感恩 — “to feel grace”. Over half of Vietnamese words come from Chinese, much as English borrowed from Latin. You will also see it written “cám ơn”; both are correct.",
+ u:"“Cảm ơn nhiều” = thanks a lot. Add the person for warmth: “Cảm ơn bà.” The answer is “Không có gì” — it's nothing.",
+ x:[["Cảm ơn ông nhiều.","Thank you very much, sir."],["Cảm ơn, ngon quá!","Thank you, it's delicious!"]]},
+{id:"khongcogi",v:"không có gì",e:"you're welcome",k:"welcome no problem it's nothing",c:"Greetings",
+ p:"khohng kaw zee — “kh” is the German “ch” in “Bach”. In Hanoi “gì” sounds like “zee”, falling.",
+ s:"Word by word: not – have – anything. So it means “it's nothing”, just like the French “de rien”.",
+ u:"The natural reply to “cảm ơn”.",
+ x:[["— Cảm ơn bạn! — Không có gì.","— Thank you! — You're welcome."]]},
+{id:"vang",v:"vâng",e:"yes",k:"yes okay polite",c:"Greetings",
+ p:"vuhng — flat tone, a short “uh” sound.",
+ s:"This is the polite northern “yes”. In the south people say “dạ”. Among close friends a quick “ừ” is enough.",
+ u:"Hanoians add a tiny “ạ” for respect: “Vâng ạ.” That little ạ is a lovely habit to copy when speaking to anyone older.",
+ x:[["Vâng, tôi hiểu.","Yes, I understand."],["Vâng ạ.","Yes (respectfully)."]]},
+{id:"khong",v:"không",e:"no / not",k:"no not zero",c:"Greetings",
+ p:"khohng — flat. The ending “-ông” closes the lips, so it sounds almost like “khohm”.",
+ s:"“Không” means no, not — and also zero. A neat trick: put it at the end of a sentence to make a question. “Ông khỏe không?” is literally “You healthy, no?”",
+ u:"“Tôi không biết” = I don't know. “Có … không?” makes a yes/no question.",
+ x:[["Ông có khỏe không?","Are you well? (to an older man)"],["Tôi không biết.","I don't know."]]},
+{id:"tambiet",v:"tạm biệt",e:"goodbye",k:"bye farewell see you",c:"Greetings",
+ p:"tahm byet — both words have the heavy tone: short, low, cut off with a little thud.",
+ s:"From Chinese 暫別: “tạm” = for a while, “biệt” = to part. So goodbye literally means “parting for a little while”.",
+ u:"Friends often just say “Chào nhé!” — bye then!",
+ x:[["Tạm biệt, hẹn gặp lại!","Goodbye, see you again!"]]},
+{id:"tenla",v:"tôi tên là …",e:"my name is …",k:"name called introduce what is your name",c:"About me",
+ p:"toy tehn lah — “tôi” and “tên” flat, “là” falling.",
+ s:"“Tôi” (I) once meant “servant”, a humble way to say I. Vietnamese mostly uses family words instead of “I” and “you” — an older man may call himself “ông” (grandpa) when talking to young people.",
+ u:"To ask an older man his name: “Ông tên là gì?”",
+ x:[["Tôi tên là Peter.","My name is Peter."],["Ông tên là gì?","What is your name, sir?"]]},
+{id:"ong",v:"ông",e:"grandfather / sir",k:"grandpa sir mister mr old man you",c:"About me",
+ p:"ohm — the “-ông” ending closes the lips, so it ends like “ohm”, not “ong”.",
+ s:"In Vietnam this word will be yours! People are addressed by family role, so strangers will call you “ông” (grandfather) or “bác” (uncle) — warm and respectful.",
+ u:"Use it for “you” with any older man. Call out “Ông ơi!” to get his attention.",
+ x:[["Ông ơi!","Excuse me, sir!"],["Ông khỏe không?","How are you, sir?"]]},
+{id:"ba",v:"bà",e:"grandmother / madam",k:"grandma madam mrs lady old woman",c:"About me",
+ p:"bah — falling tone.",
+ s:"A perfect example of tones: “ba” (flat) means three, “bà” (falling) means grandmother, “bá” (rising) means count, as in a nobleman. Same letters, different melody.",
+ u:"Use “bà” for “you” with any older woman.",
+ x:[["Chào bà!","Hello, madam!"],["Bà tôi rất hiền.","My grandmother is very kind."]]},
+{id:"khonghieu",v:"tôi không hiểu",e:"I don't understand",k:"understand confused",c:"Useful",
+ p:"toy khohng hyew — “hiểu” dips down and up.",
+ s:"“Hiểu” comes from Chinese 曉, “to understand”. A learner's best friend — Vietnamese people are delighted when a foreigner tries, and will happily repeat.",
+ u:"Pair it with “Làm ơn nói chậm lại.”",
+ x:[["Xin lỗi, tôi không hiểu.","Sorry, I don't understand."]]},
+{id:"noicham",v:"làm ơn nói chậm lại",e:"please speak more slowly",k:"slowly speak slow slower please",c:"Useful",
+ p:"lahm uhn noy chuhm lie — “nói” rises, “chậm” and “lại” are heavy: low and clipped.",
+ s:"“Làm ơn” is literally “do a favour” — that is how Vietnamese says please. “Nói” = speak, “chậm” = slow, “lại” = back down.",
+ u:"Add “ạ” at the end to sound extra polite.",
+ x:[["Làm ơn nói chậm lại ạ.","Please speak more slowly."]]},
+{id:"xinloi",v:"xin lỗi",e:"sorry / excuse me",k:"sorry apologize excuse me pardon",c:"Useful",
+ p:"sin loy — “lỗi” has the broken tone: it rises with a little catch in the throat. This catch is a Hanoi speciality.",
+ s:"“Lỗi” means fault. So “xin lỗi” is “I ask (pardon) for the fault” — the same polite “xin” as in “xin chào”.",
+ u:"For apologising and for getting someone's attention.",
+ x:[["Xin lỗi, nhà vệ sinh ở đâu?","Excuse me, where is the toilet?"]]},
+{id:"baonhieu",v:"bao nhiêu tiền?",e:"how much does it cost?",k:"price how much cost money",c:"Useful",
+ p:"bow nyew tyen — flat, flat, falling. “nh” is the Spanish ñ.",
+ s:"“Bao nhiêu” = how much, “tiền” = money (from Chinese 錢). Vietnamese money is the đồng, and prices have many zeros: a bowl of phở costs tens of thousands of đồng. Northerners say “nghìn” for thousand; southerners say “ngàn”.",
+ u:"Point and ask: “Cái này bao nhiêu tiền?”",
+ x:[["Cái này bao nhiêu tiền?","How much is this?"]]},
+{id:"ngonqua",v:"ngon quá!",e:"delicious!",k:"tasty delicious yummy good food",c:"Food",
+ p:"ngon kwah — “ng” as in “singer”; “quá” rises.",
+ s:"“Quá” means “so / too much”, and Vietnamese loves it for exclaiming: đẹp quá (so beautiful), lạnh quá (so cold). Saying “ngon quá” to a cook is the fastest way to a Vietnamese heart.",
+ u:"Put “quá” after any describing word.",
+ x:[["Phở này ngon quá!","This phở is so delicious!"]]},
+{id:"pho",v:"phở",e:"pho (noodle soup)",k:"pho noodle soup beef",c:"Food",
+ p:"fuh — dipping tone. Not “foe”! ph = f, ơ = “uh”.",
+ s:"Phở was born in northern Vietnam in the early 1900s, near Hanoi and Nam Định. Where the name comes from is still argued: some say the French beef stew “pot-au-feu”, others a Cantonese street cry for beef noodles. Hanoi phở has a clear broth and few herbs — Hanoians are very proud of it.",
+ u:"Phở bò = beef phở, phở gà = chicken phở. In the north a bowl is “bát”; in the south it's “tô”.",
+ x:[["Cho tôi một bát phở bò.","A bowl of beef phở, please."]]},
+{id:"caphe",v:"cà phê",e:"coffee",k:"coffee cafe",c:"Food",
+ p:"kah feh — “cà” falls, “phê” is flat.",
+ s:"From the French “café”. The French brought coffee in the 1800s, and Vietnam is now one of the world's biggest coffee growers. Hanoi's famous egg coffee, “cà phê trứng”, was invented in the 1940s when milk was scarce — whipped egg yolk took its place.",
+ u:"“Cho tôi …” (give me …) is the easy way to order anything.",
+ x:[["Cho tôi một cà phê sữa đá.","An iced coffee with milk, please."]]},
+{id:"banhmi",v:"bánh mì",e:"bread / baguette sandwich",k:"bread sandwich baguette",c:"Food",
+ p:"baing mee — “bánh” rises; in Hanoi the “-anh” sounds like “-aing”. “mì” falls.",
+ s:"“Bánh” is anything made from flour — cake, bread, dumpling. “Mì” is wheat. The baguette came with the French; the Vietnamese made it lighter and filled it with pâté, herbs and chilli. “Banh mi” is now even in the Oxford English Dictionary.",
+ u:"Bánh mì is a word for plain bread too.",
+ x:[["Tôi muốn mua bánh mì.","I want to buy bread."]]},
+{id:"nuoc",v:"nước",e:"water / country",k:"water country nation drink",c:"Food",
+ p:"nuhk — rising. The ư is an “oo” said with spread lips, as if smiling.",
+ s:"One word, two meanings: water and country. “Đất nước” — land and water — means homeland. Fish sauce is “nước mắm”. And Austria is “nước Áo”!",
+ u:"Cho tôi một chai nước = a bottle of water, please.",
+ x:[["Cho tôi một chai nước.","A bottle of water, please."],["Tôi đến từ nước Áo.","I come from Austria."]]},
+{id:"tra",v:"trà",e:"tea",k:"tea",c:"Food",
+ p:"chah — falling. In Hanoi “tr” sounds just like “ch”.",
+ s:"From Chinese 茶. The world's words for tea come in two families: “tea/Tee” (via the Fujian coast) and “cha/chai” (via Mandarin and Cantonese). Vietnamese is in the “cha” family. Hanoians love “trà đá”, iced green tea, drunk on tiny plastic stools on the pavement.",
+ u:"In the north, tea is also called “chè”.",
+ x:[["Uống trà đá không?","Shall we have iced tea?"]]},
+{id:"vietnam",v:"Việt Nam",e:"Vietnam",k:"vietnam country",c:"Places",
+ p:"vyet nahm — “Việt” heavy (low, clipped), “Nam” flat.",
+ s:"From Chinese 越南: “Việt” is the name of ancient southern peoples, “Nam” means south. The name became official in 1804 under Emperor Gia Long.",
+ u:"Tiếng Việt = the Vietnamese language; người Việt = Vietnamese people.",
+ x:[["Tôi muốn đi Việt Nam.","I want to go to Vietnam."]]},
+{id:"hanoi",v:"Hà Nội",e:"Hanoi",k:"hanoi capital city",c:"Places",
+ p:"hah noy — “Hà” falls, “Nội” heavy.",
+ s:"From Chinese 河內, “inside the river” — the city sits in a bend of the Red River. It was renamed Hà Nội in 1831; for centuries before that it was Thăng Long, “Rising Dragon”, founded in 1010. The Hanoi accent is the standard heard on national radio and TV — the one you're learning.",
+ u:"",
+ x:[["Tôi yêu Hà Nội.","I love Hanoi."]]},
+{id:"tiengviet",v:"tiếng Việt",e:"Vietnamese (language)",k:"vietnamese language",c:"Places",
+ p:"tyeng vyet — “tiếng” rises, “Việt” heavy.",
+ s:"“Tiếng” means sound, voice, language. Vietnamese is written in Latin letters thanks to Portuguese and French missionaries in the 1600s; Alexandre de Rhodes printed a dictionary in 1651. Before that, people wrote with Chinese characters. The little marks on the letters are the tones.",
+ u:"",
+ x:[["Tôi đang học tiếng Việt.","I am learning Vietnamese."]]},
+{id:"hoc",v:"học",e:"learn / study",k:"learn study school",c:"Everyday",
+ p:"hawk — heavy tone: short, low, and the final c is barely heard.",
+ s:"From Chinese 學. Đi học = go to school, học sinh = pupil, đại học = university (“great learning”).",
+ u:"“Đang” before a verb means “am doing right now”.",
+ x:[["Tôi học tiếng Việt mỗi ngày.","I study Vietnamese every day."]]},
+{id:"an",v:"ăn",e:"eat",k:"eat food meal",c:"Everyday",
+ p:"ahn — short, flat “a”.",
+ s:"“Ăn cơm” — eat rice — simply means to have a meal. Friends greet each other with “Ăn cơm chưa?”, “Eaten yet?”, a habit from harder times when a full stomach was the best news.",
+ u:"",
+ x:[["Ông ăn cơm chưa?","Have you eaten yet, sir?"]]},
+{id:"uong",v:"uống",e:"drink",k:"drink cheers",c:"Everyday",
+ p:"oo-ohng — rising.",
+ s:"The famous toast: “Một, hai, ba, dô!” — one, two, three, cheers! In Hanoi men also shout “Trăm phần trăm!” — a hundred percent — meaning empty your glass.",
+ u:"",
+ x:[["Ông uống gì?","What would you like to drink, sir?"]]},
+{id:"di",v:"đi",e:"go",k:"go walk travel let's",c:"Everyday",
+ p:"dee — flat. đ (with the line) is a normal English d.",
+ s:"Đi bộ = go on foot, walk. At the end of a sentence “đi” means “go ahead!” — “Ăn đi!” = eat, go on!",
+ u:"“Chúng ta đi thôi!” = let's go!",
+ x:[["Chúng ta đi thôi!","Let's go!"]]},
+{id:"nha",v:"nhà",e:"house / home",k:"house home",c:"Everyday",
+ p:"nyah — falling.",
+ s:"“Nhà tôi” — my house — is also how people say “my wife” or “my husband”. Hanoi's old quarter is full of tall, narrow “tube houses”; the story goes that shops were once taxed by the width of their front.",
+ u:"Vienna in Vietnamese is “Viên”.",
+ x:[["Nhà tôi ở Viên.","My home is in Vienna."]]},
+{id:"ban",v:"bạn",e:"friend / you",k:"friend you buddy",c:"Everyday",
+ p:"bahn — heavy tone.",
+ s:"Means friend, and also “you” for someone of your own age.",
+ u:"",
+ x:[["Đây là bạn tôi.","This is my friend."]]},
+{id:"giadinh",v:"gia đình",e:"family",k:"family",c:"Everyday",
+ p:"zah ding — in Hanoi “gi” sounds like z; “đình” falls.",
+ s:"From Chinese 家庭: “gia” = home, “đình” = courtyard. A family is the home with its courtyard.",
+ u:"",
+ x:[["Gia đình tôi có bốn người.","My family has four people."]]},
+{id:"yeu",v:"yêu",e:"love",k:"love i love you",c:"Feelings",
+ p:"yew — flat.",
+ s:"Vietnamese has no single “I love you” — it depends who is speaking to whom. A husband to his wife: “Anh yêu em.” The wife back: “Em yêu anh.” Tình yêu = love (the noun).",
+ u:"",
+ x:[["Tôi yêu Việt Nam.","I love Vietnam."]]},
+{id:"dep",v:"đẹp",e:"beautiful",k:"beautiful pretty nice handsome",c:"Feelings",
+ p:"dep — heavy: low and cut off sharply.",
+ s:"For people, places and weather: “trời đẹp” — beautiful sky — means nice weather. Hanoi's Hoàn Kiếm Lake is also called Hồ Gươm, “Sword Lake”: legend says a golden turtle took back a magic sword there after the king won his war in the 1400s.",
+ u:"",
+ x:[["Hồ Gươm đẹp quá!","Sword Lake is so beautiful!"]]},
+{id:"troioi",v:"trời ơi!",e:"oh my goodness!",k:"oh my god oh my wow oh dear goodness heavens",c:"Feelings",
+ p:"choy uh-ee — “trời” falls (tr = ch in Hanoi), “ơi” is flat.",
+ s:"“Trời” is sky or heaven; “ơi” is the word for calling out to someone. So: “Oh, heaven!” — for surprise, joy or despair alike.",
+ u:"",
+ x:[["Trời ơi, lạnh quá!","Oh my, it's so cold!"]]},
+{id:"motaiba",v:"một, hai, ba",e:"one, two, three",k:"numbers one two three count",c:"Everyday",
+ p:"moht, hai, bah — heavy, flat, flat.",
+ s:"Counting is wonderfully logical: eleven is “mười một” — ten-one; twenty is “hai mươi” — two-ten.",
+ u:"",
+ x:[["Một, hai, ba, dô!","One, two, three, cheers!"]]},
+{id:"ngungon",v:"ngủ ngon",e:"good night",k:"good night sleep well",c:"Greetings",
+ p:"ngoo ngon — “ngủ” dips down and up.",
+ s:"Literally “sleep delicious” — the same “ngon” as tasty food. A good sleep is a tasty one.",
+ u:"“Chúc” = I wish you.",
+ x:[["Chúc bà ngủ ngon.","Good night, madam."]]},
+{id:"tet",v:"chúc mừng năm mới",e:"happy new year",k:"new year tet happy",c:"Greetings",
+ p:"chook muhng nahm muh-ee — “mừng” falls, “mới” rises.",
+ s:"Tết, the Lunar New Year in late January or February, is the biggest festival. Northern homes fill with pink peach blossom; the south prefers yellow apricot blossom. Children receive red envelopes of “lucky money” called lì xì.",
+ u:"",
+ x:[["Chúc mừng năm mới! Chúc ông sức khỏe!","Happy New Year! Wishing you good health!"]]},
+{id:"meo",v:"mèo",e:"cat",k:"cat kitten",c:"Nature",
+ p:"meh-oh — falling. It sounds like the cat itself.",
+ s:"The Vietnamese zodiac has a Year of the Cat where the Chinese one has the Rabbit. “Con” goes before animal words: con mèo, con chó.",
+ u:"",
+ x:[["Con mèo đang ngủ.","The cat is sleeping."]]},
+{id:"cho",v:"chó",e:"dog",k:"dog puppy",c:"Nature",
+ p:"chaw — rising.",
+ s:"Like all animals, it takes “con” in front: con chó.",
+ u:"",
+ x:[["Con chó của tôi rất ngoan.","My dog is very good."]]},
+{id:"oto",v:"ô tô",e:"car",k:"car automobile",c:"Everyday",
+ p:"oh toh — both flat.",
+ s:"From the French “auto”. Northerners say “ô tô”, southerners “xe hơi” (steam vehicle). More French gifts: ga (gare, station), bơ (beurre, butter), pho mát (fromage, cheese), kem (crème, ice cream), áo sơ mi (chemise, shirt).",
+ u:"",
+ x:[["Ô tô của ông màu gì?","What colour is your car, sir?"]]},
+{id:"song",v:"sông",e:"river",k:"river",c:"Nature",
+ p:"sohm — flat; the lips close at the end.",
+ s:"Hanoi lies on the Sông Hồng, the Red River, coloured by its iron-red silt. In the far south the Mekong is called Cửu Long, “Nine Dragons”.",
+ u:"",
+ x:[["Sông Hồng rất dài.","The Red River is very long."]]},
+{id:"mua",v:"mưa",e:"rain",k:"rain raining",c:"Nature",
+ p:"muh-uh — flat; ư is the smiling “oo”.",
+ s:"Hanoi has “mưa phùn”, a fine misty drizzle in late winter and spring. “Trời mưa” — the sky rains — means it's raining.",
+ u:"",
+ x:[["Hôm nay trời mưa.","It's raining today."]]},
+{id:"lanh",v:"lạnh",e:"cold",k:"cold chilly",c:"Nature",
+ p:"laing — heavy tone.",
+ s:"Hanoi has a real winter — damp, grey, and colder than visitors expect. The opposite is “nóng”, hot.",
+ u:"",
+ x:[["Trời lạnh quá!","It's so cold!"]]},
+{id:"hanhphuc",v:"hạnh phúc",e:"happiness / happy",k:"happy happiness",c:"Feelings",
+ p:"haing fook — heavy, then rising.",
+ s:"From Chinese 幸福. The standard wedding wish is “Chúc hai bạn hạnh phúc” — wishing you both happiness.",
+ u:"",
+ x:[["Tôi rất hạnh phúc.","I am very happy."]]},
+{id:"tutu",v:"từ từ",e:"slowly / take your time",k:"slowly take your time easy wait",c:"Useful",
+ p:"tuh tuh — both falling; ư is the smiling “oo”.",
+ s:"The secret of crossing a Hanoi street: walk “từ từ”, slowly and steadily, and the motorbikes flow around you.",
+ u:"“Từ từ thôi!” = take it easy!",
+ x:[["Từ từ, không sao.","Take your time, no problem."]]},
+{id:"khongsao",v:"không sao",e:"no problem / it's okay",k:"no problem never mind okay fine",c:"Useful",
+ p:"khohng sow — both flat.",
+ s:"Literally “not how” — nothing's the matter.",
+ u:"The kind reply to “xin lỗi”.",
+ x:[["— Xin lỗi! — Không sao.","— Sorry! — No problem."]]},
+{id:"aodai",v:"áo dài",e:"long traditional dress",k:"ao dai dress long dress",c:"Places",
+ p:"ow zai — “áo” rises, “dài” falls (d sounds like z in Hanoi).",
+ s:"“Áo” = garment, “dài” = long. The slim modern áo dài was designed by Hanoi artists in the 1930s.",
+ u:"",
+ x:[["Cô ấy mặc áo dài rất đẹp.","She looks lovely in her áo dài."]]},
+{id:"odau",v:"ở đâu?",e:"where is …?",k:"where where is",c:"Useful",
+ p:"uh dow — “ở” dips, “đâu” flat.",
+ s:"Questions in Vietnamese keep the normal word order — the question word stays at the end.",
+ u:"",
+ x:[["Hồ Gươm ở đâu?","Where is Sword Lake?"]]},
+{id:"nho",v:"nhớ",e:"remember / miss",k:"remember miss memory forget",c:"Feelings",
+ p:"nyuh — rising.",
+ s:"The same word means remember and miss someone — to miss is to keep remembering. Vietnamese learners joke “học trước quên sau”: learn first, forget after. Everyone forgets; coming back is what counts.",
+ u:"“Quên” means forget.",
+ x:[["Tôi nhớ rồi!","I remember now!"],["Tôi nhớ bạn.","I miss you."]]}
+];
+
+</script>
+<script>
+{
+const $=s=>document.querySelector(s);
+const app=$('#app');
+const DAY=864e5;
+const today=()=>{const d=new Date();d.setHours(0,0,0,0);return d.getTime()};
+const GAPS=[0,1,2,4,7,14,30,60,120]; // days until next review for each box
+const PRAISE=["Giỏi quá! — Well done!","Tuyệt vời! — Wonderful!","Hay lắm! — Very good!","Đúng rồi! — That's right!"];
+const COMFORT=["Không sao — no problem. It will come back tomorrow.","Từ từ — slowly does it. You'll see it again soon.","Học trước quên sau — everyone forgets. That's how we learn."];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- saved data ---------- */
+let S;
+function load(){try{S=JSON.parse(localStorage.getItem('lotusviet')||'null')}catch(e){S=null}
+ if(!S){S={mine:{},own:[],days:[],size:20,rate:0.8,
+   started:Date.now()};["xinchao","camon","vang","khong","tambiet"].forEach(id=>S.mine[id]={box:0,due:today()});}
+}
+function save(){try{localStorage.setItem('lotusviet',JSON.stringify(S))}catch(e){}}
+load();
+document.documentElement.style.setProperty('--fs',S.size+'px');
+const byId=id=>LIB.find(w=>w.id===id)||S.own.find(w=>w.id===id);
+const myList=()=>Object.keys(S.mine).map(byId).filter(Boolean);
+const dueList=()=>Object.entries(S.mine).filter(([id,m])=>m.due<=today()&&byId(id)).map(([id])=>byId(id));
+function markDay(){const t=today();if(!S.days.includes(t)){S.days.push(t);save();return true}return false}
+
+/* ---------- voice (works offline once a Vietnamese voice is on the phone) ---------- */
+let voice=null;
+function findVoice(){if(!('speechSynthesis' in window))return;const vs=speechSynthesis.getVoices().filter(v=>/^vi/i.test(v.lang));
+ voice=vs.find(v=>/linh/i.test(v.name))||vs.find(v=>v.localService)||vs[0]||null}
+if('speechSynthesis' in window){findVoice();speechSynthesis.onvoiceschanged=findVoice}
+function say(text,slow){if(!('speechSynthesis' in window)){toast('This phone has no speech voice.');return}
+ speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text.replace(/[—…]/g,' '));u.lang='vi-VN';if(voice)u.voice=voice;
+ u.rate=slow?S.rate*0.55:S.rate;speechSynthesis.speak(u);
+ if(!voice)setTimeout(()=>{findVoice();if(!voice)toast('No Vietnamese voice found yet — see “Sounds” for how to add one.')},400)}
+const ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 8v8a4.5 4.5 0 002.5-4zM14 3.2v2.1a7 7 0 010 13.4v2.1a9 9 0 000-17.6z"/></svg>';
+const speakBtns=t=>`<button class="speak" data-say="${esc(t)}">${ICON}Listen</button><button class="speak slow" data-say="${esc(t)}" data-slow="1">${ICON}Slowly</button>`;
+function toast(m){const d=document.createElement('div');d.className='toast';d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),3200)}
+
+/* ---------- navigation ---------- */
+const TABS=[["home","Home",'<path d="M3 11l9-8 9 8v10h-6v-6H9v6H3z"/>'],["practice","Practice",'<path d="M12 21s-7-4.5-7-11a7 7 0 0114 0c0 6.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>'],
+ ["words","My words",'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>'],["add","Add word",'<circle cx="12" cy="12" r="9"/><path d="M12 7v10M7 12h10"/>'],
+ ["sounds","Sounds",'<path d="M3 12h2l2-6 3 12 3-9 2 6 2-3h4"/>']];
+let tab='home';
+function go(t,arg){tab=t;$('#nav').innerHTML=TABS.map(([id,l,p])=>`<button data-tab="${id}" aria-current="${id===t}"><svg viewBox="0 0 24 24">${p}</svg>${l}</button>`).join('');
+ (VIEWS[t]||VIEWS.home)(arg);window.scrollTo(0,0)}
+
+/* ---------- lotus pond picture ---------- */
+function pond(n){const flowers=Math.min(n,30);let g='';
+ for(let i=0;i<30;i++){const x=30+(i%10)*58+(Math.floor(i/10)%2)*24,y=70+Math.floor(i/10)*45;
+  g+=`<ellipse cx="${x}" cy="${y+12}" rx="24" ry="8" fill="#3f8f5a" opacity=".85"/>`;
+  if(i<flowers)g+=`<g class="pop" transform="translate(${x} ${y})"><path d="M0-14c5 6 5 14 0 20-5-6-5-14 0-20z" fill="#f48fb1"/><path d="M0 6c-8-1-13-7-14-14 7 1 12 6 14 14z" fill="#f8bbd0"/><path d="M0 6c8-1 13-7 14-14-7 1-12 6-14 14z" fill="#f8bbd0"/><circle cy="2" r="2.5" fill="${'#e8a817'}"/></g>`;}
+ return `<svg viewBox="0 0 600 210" role="img" aria-label="Your lotus pond: ${n} flowers, one for each day you practised"><rect width="600" height="210" fill="#9fd0da"/><path d="M0 40q150-25 300 0t300 0v170H0z" fill="#7fbccb"/>${g}</svg>`}
+
+/* ---------- views ---------- */
+const VIEWS={};
+VIEWS.home=()=>{const due=dueList().length,n=S.days.length,mine=Object.keys(S.mine).length;
+ const done=S.days.includes(today());
+ const fact=pick(LIB);
+ app.innerHTML=`<div class="pond">${pond(n)}</div>
+ <div class="stat"><div><b>${n}</b>days practised</div><div><b>${mine}</b>my words</div><div><b>${due}</b>ready today</div></div>
+ <button class="big primary" data-tab="practice">${done&&!due?'Practise a little more':'Start today’s practice'}</button>
+ <div class="row"><button data-tab="game" data-g="listen">Listening game</button><button data-tab="game" data-g="match">Matching game</button></div>
+ <div class="card"><h3 style="margin-top:0">Did you know?</h3><p class="vi" style="font-size:1.5em">${esc(fact.v)}</p><p class="en">${esc(fact.e)}</p><p>${esc(fact.s)}</p>${speakBtns(fact.v)}
+ <button class="btn" data-open="${fact.id}" style="margin-top:8px">See the whole card</button></div>
+ <p class="muted">${done?'You have practised today. A new lotus opened in your pond.':'Each day you practise, a new lotus opens in your pond. No hurry, no scores — only flowers.'}</p>`};
+
+VIEWS.card=(id)=>{const w=byId(id);if(!w)return go('words');const m=S.mine[id];
+ app.innerHTML=`<button class="btn" data-tab="${m?'words':'add'}">‹ Back</button>
+ <div class="card"><span class="chip">${esc(w.c||'My own')}</span><p class="vi">${esc(w.v||'(Vietnamese not added yet)')}</p><p class="en">${esc(w.e)}</p>
+ ${w.v?speakBtns(w.v):''}
+ ${w.p?`<h3>How to say it (Hanoi)</h3><p>${esc(w.p)}</p>`:''}
+ ${w.s?`<h3>The story</h3><p>${esc(w.s)}</p>`:''}
+ ${w.u?`<h3>How to use it</h3><p>${esc(w.u)}</p>`:''}
+ ${w.note?`<h3>My note</h3><p>${esc(w.note)}</p>`:''}
+ ${w.x&&w.x.length?`<h3>Examples</h3>`+w.x.map(([v,e])=>`<div class="ex"><b>${esc(v)}</b><br>${esc(e)}<br>${speakBtns(v.replace(/—/g,''))}</div>`).join(''):''}
+ ${!w.s&&w.own?`<p class="muted">This is your own word. Ask Claude to write its story, sound guide and examples, and it will be added in the next update.</p>`:''}
+ </div>
+ ${m?`<button class="big" data-remove="${id}">Remove from my words</button>`:`<button class="big primary" data-addw="${id}">Add to my words</button>`}`};
+
+VIEWS.words=()=>{const list=myList().sort((a,b)=>a.e.localeCompare(b.e));
+ app.innerHTML=`<h2>My words</h2><p class="muted">Tap a word to see its story. ${list.length} words.</p>
+ <div class="list">${list.map(w=>{const b=S.mine[w.id].box;return `<div class="item" data-open="${w.id}"><div><b>${esc(w.v||'…')}</b><br><span class="muted" style="font-size:.8em">${esc(w.e)}</span></div><span class="chip" title="How well you know it">${'●'.repeat(Math.min(b,5))||'new'}</span></div>`}).join('')}</div>
+ <h3>Safekeeping</h3><p class="muted">Copy this backup text and keep it in a note or e-mail to yourself. Paste it back if you change phones.</p>
+ <div class="row"><button data-backup>Copy backup</button><button data-restore>Restore from backup</button></div><div id="bk"></div>
+ <h3>Text size</h3><div class="row"><button data-size="18">Normal</button><button data-size="20">Large</button><button data-size="24">Very large</button></div>`};
+
+VIEWS.add=(q)=>{app.innerHTML=`<h2>Add a word</h2><p>Type an English word or short phrase you want to learn.</p>
+ <input id="q" placeholder="e.g. thank you, coffee, rain" value="${esc(q||'')}" autocomplete="off"><div id="res"></div>`;
+ const inp=$('#q');inp.oninput=()=>showRes(inp.value);showRes(q||'');if(!q)inp.focus()};
+function showRes(q){q=q.trim().toLowerCase();const r=$('#res');
+ const avail=LIB.filter(w=>!S.mine[w.id]);
+ if(!q){r.innerHTML=`<h3>Ideas from the library (${avail.length})</h3><div class="list">${avail.map(w=>`<div class="item" data-open="${w.id}"><div><b>${esc(w.e)}</b><br><span class="muted" style="font-size:.8em">${esc(w.v)}</span></div><span class="chip">${esc(w.c)}</span></div>`).join('')}</div>`+waiting();return}
+ const hits=LIB.filter(w=>(w.e+' '+w.k+' '+w.v).toLowerCase().includes(q));
+ r.innerHTML=(hits.length?`<h3>Found in the library</h3><div class="list">${hits.map(w=>`<div class="item"><div data-open="${w.id}"><b>${esc(w.e)}</b><br><span class="muted" style="font-size:.8em">${esc(w.v)}</span></div>${S.mine[w.id]?'<span class="chip">already yours</span>':`<button class="primary" data-addw="${w.id}">Add</button>`}</div>`).join('')}</div>`:'<p class="card">That word is not in the library yet. Save it below — you can fill in the Vietnamese yourself, or leave it blank and ask Claude to write the full card for it.</p>')+
+ (hits.length?'<details class="card"><summary>Not what you meant? Save it as my own word</summary>':'<div class="card"><h3 style="margin-top:0">Save as my own word</h3>')+`<label>English<input id="oe" value="${esc(q)}"></label><label>Vietnamese (if you know it)<input id="ov" placeholder="optional"></label><label>A note to help me remember<textarea id="on" rows="2" placeholder="optional"></textarea></label><button class="big primary" data-own>Save my word</button>`+(hits.length?'</details>':'</div>')+waiting()}
+function waiting(){const w=S.own.filter(o=>!o.s);if(!w.length)return '';
+ return `<div class="card"><h3 style="margin-top:0">Waiting for a story (${w.length})</h3><p>${w.map(o=>esc(o.e)).join(', ')}</p><p class="muted">Copy this list and paste it to Claude. Claude will write the stories, sounds and examples and add them to the app.</p><button data-copywait>Copy the list</button></div>`}
+
+/* ---------- daily practice: gentle spaced repetition ---------- */
+let Q=[],cur=null,sessionDone=0;
+VIEWS.practice=()=>{let due=shuffle(dueList()).slice(0,12);
+ if(due.length<4){const extra=myList().filter(w=>!due.includes(w)).sort((a,b)=>S.mine[a.id].due-S.mine[b.id].due).slice(0,4-due.length);due=due.concat(extra)}
+ Q=due;sessionDone=0;
+ if(!Q.length){app.innerHTML=`<h2>Nothing to practise yet</h2><p>Add some words first.</p><button class="big primary" data-tab="add">Add a word</button>`;return}
+ nextCard()};
+function nextCard(){cur=Q.shift();if(!cur)return finish();
+ app.innerHTML=`<p class="muted">Card ${sessionDone+1} — ${Q.length} more after this</p>
+ <div class="card" style="text-align:center"><p class="muted">How do you say…</p><p class="vi" style="font-size:1.8em">${esc(cur.e)}</p>
+ <p class="muted">Say it out loud, then tap below.</p></div><button class="big primary" data-reveal>Show me</button>`}
+function reveal(){const w=cur;app.innerHTML=`<div class="card" style="text-align:center"><p class="en">${esc(w.e)}</p><p class="vi">${esc(w.v||'(no Vietnamese yet)')}</p>${w.v?speakBtns(w.v):''}
+ ${w.p?`<p class="muted" style="text-align:left">${esc(w.p)}</p>`:''}</div>
+ <div class="row"><button class="big ok" data-grade="1">I knew it</button><button class="big" data-grade="0">Not yet</button></div>`;
+ if(w.v)say(w.v)}
+function grade(g){const m=S.mine[cur.id]||(S.mine[cur.id]={box:0,due:today()});
+ if(g){m.box=Math.min(m.box+1,GAPS.length-1);m.due=today()+GAPS[m.box]*DAY}
+ else{m.box=Math.max(0,m.box-2);m.due=today();if(!Q.includes(cur))Q.splice(Math.min(2,Q.length),0,cur)}
+ sessionDone++;save();toast(g?pick(PRAISE):pick(COMFORT));nextCard()}
+function finish(){const isNew=markDay();
+ app.innerHTML=`<div class="pond">${pond(S.days.length)}</div><p class="cheer">${isNew?'A new lotus has opened!':'Lovely — extra practice done.'}</p>
+ <p style="text-align:center">You went through ${sessionDone} cards. Words you knew will come back later; the others come back sooner.</p>
+ <div class="row"><button class="big" data-tab="game" data-g="listen">Listening game</button><button class="big" data-tab="game" data-g="match">Matching game</button></div>
+ <button class="big primary" data-tab="home">Back home</button>`}
+
+/* ---------- games ---------- */
+VIEWS.game=(g)=>{const pool=myList().filter(w=>w.v);const all=pool.length>=4?pool:pool.concat(LIB.filter(w=>!pool.includes(w))).slice(0,Math.max(8,pool.length));
+ if(g==='match')return match(shuffle(all).slice(0,4));listen(all,0,0)};
+function listen(pool,round,score){if(round===6){markDay();app.innerHTML=`<p class="cheer">${score} of 6 by ear!</p><p style="text-align:center">${score>=4?pick(PRAISE):'Listening is the hardest part — every try trains your ear.'}</p><button class="big primary" data-tab="game" data-g="listen">Play again</button><button class="big" data-tab="home">Home</button>`;return}
+ const opts=shuffle(pool).slice(0,3),ans=opts[0];const shown=shuffle(opts);
+ app.innerHTML=`<p class="muted">Round ${round+1} of 6</p><h2>Listen. What does it mean?</h2>${speakBtns(ans.v)}
+ ${shown.map(o=>`<button class="choice" data-pickl="${o.id}">${esc(o.e)}</button>`).join('')}`;say(ans.v);
+ app.querySelectorAll('[data-pickl]').forEach(b=>b.onclick=()=>{const right=b.dataset.pickl===ans.id;
+  app.querySelectorAll('[data-pickl]').forEach(x=>{x.disabled=true;x.classList.add(x.dataset.pickl===ans.id?'right':'wrong')});
+  const msg=document.createElement('p');msg.className='cheer';msg.innerHTML=(right?pick(PRAISE):'It was: '+esc(ans.v))+'<br>';
+  const nb=document.createElement('button');nb.className='big primary';nb.textContent='Next';nb.onclick=()=>listen(pool,round+1,score+(right?1:0));
+  app.append(msg,nb)})}
+function match(set){let sel=null,left=set.length;
+ const L=shuffle(set).map(w=>`<button data-m="${w.id}" data-side="v">${esc(w.v)}</button>`),R=shuffle(set).map(w=>`<button data-m="${w.id}" data-side="e">${esc(w.e)}</button>`);
+ app.innerHTML=`<h2>Match the pairs</h2><p class="muted">Tap a Vietnamese word, then its meaning.</p><div class="match">${L.map((l,i)=>l+R[i]).join('')}</div><div id="mres"></div>`;
+ app.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{if(b.dataset.side==='v')say(byId(b.dataset.m).v);
+  if(!sel||sel.dataset.side===b.dataset.side){if(sel)sel.classList.remove('sel');sel=b;b.classList.add('sel');return}
+  if(sel.dataset.m===b.dataset.m){sel.classList.add('done');b.classList.add('done');left--;sel=null;
+   if(!left){markDay();$('#mres').innerHTML=`<p class="cheer">${pick(PRAISE)}</p><button class="big primary" data-tab="game" data-g="match">New pairs</button><button class="big" data-tab="home">Home</button>`}}
+  else{sel.classList.remove('sel');sel=null;toast('Not a pair — try again.')}})}
+
+/* ---------- sound guide ---------- */
+const TONES=[["ma","flat (no mark)","Level and even, like holding a note.","ghost"],["mà","falling (`)","Starts low-ish and sinks gently, like a sigh.","but"],
+ ["má","rising (´)","Goes up sharply, like a surprised “eh?”","mother"],["mả","dipping (?)","Dips down then comes back up, like a doubtful “hmm?”","grave"],
+ ["mã","broken (~)","Rises with a catch in the throat. Hanoi keeps this tone distinct.","horse"],["mạ","heavy (.)","Short and low, cut off with a little thud.","rice seedling"]];
+const LETTERS=[["d, gi, r","all sound like z","dài → zai, gì → zee"],["đ","English d","đi → dee"],["tr, ch","both like ch","trà → chah"],["s, x","both like s","xin → sin"],
+ ["ph","f","phở → fuh"],["kh","German ch in “Bach”","không"],["nh","Spanish ñ","nhà → nyah"],["ng / ngh","ng in “singer”, even at the start","ngon"],
+ ["ư","oo with lips spread, as if smiling","nước"],["ơ","uh","ơn → uhn"],["-ông","lips close at the end: “ohm”","ông, sông"]];
+VIEWS.sounds=()=>{app.innerHTML=`<h2>Sounds of Hanoi</h2><p>Vietnamese is sung as much as spoken: each word has a melody, called a tone. The same letters with a different tone make a different word. Tap each one and listen.</p>
+ <div class="card">${TONES.map(([w,n,d,m])=>`<div class="ex"><b style="font-size:1.6em">${w}</b> <span class="chip">${n}</span><br>${d} <span class="muted">— means “${m}”</span><br>${speakBtns(w)}</div>`).join('')}</div>
+ <h3>Letters that sound different</h3><div class="card">${LETTERS.map(([a,b,c])=>`<div class="ex"><b>${a}</b> — ${b}<br><span class="muted">${c}</span></div>`).join('')}</div>
+ <h3>Voice</h3><div class="card"><p id="vinfo"></p><button data-say="Xin chào, tôi là giọng nói tiếng Việt.">Test the voice</button>
+ <p class="muted" style="margin-top:12px"><b>iPhone:</b> Settings → Accessibility → Spoken Content → Voices → Vietnamese → download “Linh”.<br><b>Android:</b> Settings → search “Text-to-speech” → Google Speech Services → Install voice data → Vietnamese → download.<br>Once downloaded, the voice works with no internet.</p>
+ <p>Speaking speed</p><div class="row"><button data-rate="0.6">Slow</button><button data-rate="0.8">Calm</button><button data-rate="1">Normal</button></div></div>`;
+ findVoice();$('#vinfo').textContent=voice?`Voice in use: ${voice.name}`:'No Vietnamese voice found on this phone yet — follow the steps below.'};
+
+/* ---------- one click handler for everything ---------- */
+document.addEventListener('click',e=>{const t=e.target.closest('button,[data-open]');if(!t)return;const d=t.dataset;
+ if(d.say!==undefined){say(d.say,!!d.slow);return}
+ if(d.tab){go(d.tab,d.g);return}
+ if(d.open){go('card',d.open);return}
+ if(d.addw){S.mine[d.addw]={box:0,due:today()};save();toast('Added! It will appear in your practice.');go('card',d.addw);return}
+ if(d.remove){delete S.mine[d.remove];save();toast('Removed.');go('words');return}
+ if(d.reveal!==undefined)return reveal();
+ if(d.grade)return grade(d.grade==='1');
+ if(d.own!==undefined){const e1=$('#oe').value.trim();if(!e1)return toast('Please type the English word.');
+  const id='own'+Date.now();S.own.push({id,e:e1,v:$('#ov').value.trim(),note:$('#on').value.trim(),c:'My own',own:true});S.mine[id]={box:0,due:today()};save();toast('Saved to my words.');go('card',id);return}
+ if(d.copywait!==undefined){copy('Please write Lotus Viet word cards (Hanoi pronunciation) for: '+S.own.filter(o=>!o.s).map(o=>o.e).join('; '));return}
+ if(d.backup!==undefined){copy(JSON.stringify(S));return}
+ if(d.restore!==undefined){$('#bk').innerHTML=`<textarea id="bkt" rows="4" placeholder="Paste your backup text here"></textarea><button class="big primary" data-dorestore>Restore</button>`;return}
+ if(d.dorestore!==undefined){try{const n=JSON.parse($('#bkt').value);if(!n.mine)throw 0;S=n;save();toast('Restored!');go('home')}catch(x){toast('That backup text did not work. Check it was copied fully.')}return}
+ if(d.size){S.size=+d.size;save();document.documentElement.style.setProperty('--fs',S.size+'px');return}
+ if(d.rate){S.rate=+d.rate;save();say('Xin chào');return}
+});
+function copy(text){const done=()=>toast('Copied. Now paste it where you like.');
+ if(navigator.clipboard)navigator.clipboard.writeText(text).then(done,()=>showCopy(text));else showCopy(text)}
+function showCopy(text){const b=$('#bk')||$('#res')||app;const t=document.createElement('textarea');t.rows=4;t.value=text;b.appendChild(t);t.select();toast('Select all the text and copy it.')}
+
+go('home');
+if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+}
+</script>
+</body>
+</html>
